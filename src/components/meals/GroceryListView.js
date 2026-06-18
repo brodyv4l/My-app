@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors, radius } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function GroceryListView({ groups, checked, onToggle }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   if (!groups?.length) {
     return <Text style={styles.empty}>Generate a meal plan to build your grocery list.</Text>;
   }
@@ -28,7 +31,7 @@ export default function GroceryListView({ groups, checked, onToggle }) {
                 accessibilityState={{ checked: isChecked }}
               >
                 <View style={[styles.checkbox, isChecked && styles.checkboxOn]}>
-                  {isChecked ? <Feather name="check" size={14} color="#09090b" /> : null}
+                  {isChecked ? <Feather name="check" size={14} color={colors.onAccent} /> : null}
                 </View>
                 <Text style={[styles.item, isChecked && styles.itemChecked]}>{item}</Text>
               </TouchableOpacity>
@@ -40,7 +43,7 @@ export default function GroceryListView({ groups, checked, onToggle }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   empty: { color: colors.textMuted, textAlign: 'center', padding: 24 },
   progress: { fontSize: 13, color: colors.textMuted, marginBottom: 16 },
   section: { marginBottom: 20 },

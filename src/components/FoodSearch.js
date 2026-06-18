@@ -1,13 +1,15 @@
-﻿import { useState } from 'react';
+﻿import { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, ActivityIndicator,
 } from 'react-native';
-import { colors } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { useFoodSearch } from '../hooks/useFoodSearch';
 import { enrichFood, getActiveProvider } from '../services/food/searchFoods';
 import { isApiConfigured } from '../config/foodApi';
 
 export default function FoodSearch({ onAdd, meal }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
   const [servings, setServings] = useState('1');
@@ -119,7 +121,7 @@ export default function FoodSearch({ onAdd, meal }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { marginBottom: 12 },
   row: { flexDirection: 'row', gap: 8 },
   searchInput: {

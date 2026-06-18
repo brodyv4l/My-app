@@ -1,8 +1,12 @@
-﻿import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+﻿import { useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { GOAL_TYPES } from '../../../constants/theme';
-import { colors, radius } from '../../../constants/theme';
+import { radius } from '../../../constants/theme';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function CoreGoalStep({ survey, errors, onChange }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
       {errors.goalType ? <Text style={styles.error}>{errors.goalType}</Text> : null}
@@ -22,7 +26,7 @@ export default function CoreGoalStep({ survey, errors, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   option: {
     backgroundColor: colors.surface,
     borderWidth: 1,

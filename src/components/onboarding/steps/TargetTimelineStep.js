@@ -1,9 +1,12 @@
-﻿import { View, Text, StyleSheet } from 'react-native';
+﻿import { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Input } from '../../ui/Input';
 import DatePickerField from '../DatePickerField';
-import { colors } from '../../../constants/theme';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function TargetTimelineStep({ survey, errors, onChange }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
       <Input
@@ -25,6 +28,6 @@ export default function TargetTimelineStep({ survey, errors, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   note: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
 });

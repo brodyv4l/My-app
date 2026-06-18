@@ -1,12 +1,15 @@
-﻿import { useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format, parseISO, isValid } from 'date-fns';
 import { Input } from '../ui/Input';
-import { colors, radius } from '../../constants/theme';
+import { radius } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 import { minTargetDate } from '../../utils/onboardingValidation';
 
 export default function DatePickerField({ value, onChange, error, label = 'Target date' }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [show, setShow] = useState(false);
   const minDate = minTargetDate();
 
@@ -60,7 +63,7 @@ export default function DatePickerField({ value, onChange, error, label = 'Targe
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   wrap: { marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 6 },
   field: {

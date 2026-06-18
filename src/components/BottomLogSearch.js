@@ -1,15 +1,18 @@
-﻿import { useState } from 'react';
+﻿import { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard,
   ActivityIndicator, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, MEAL_TYPES, defaultMealByTime, radius } from '../constants/theme';
+import { MEAL_TYPES, defaultMealByTime, radius } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { useFoodSearch } from '../hooks/useFoodSearch';
 import { enrichFood } from '../services/food/searchFoods';
 import { isApiConfigured } from '../config/foodApi';
 
 export default function BottomLogSearch({ onAdd }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
@@ -103,7 +106,7 @@ export default function BottomLogSearch({ onAdd }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   wrap: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
@@ -146,7 +149,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   addBtn: { backgroundColor: colors.accent, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 12 },
-  addBtnText: { color: '#09090b', fontWeight: '700', fontSize: 14 },
+  addBtnText: { color: colors.onAccent, fontWeight: '700', fontSize: 14 },
   cancelBtn: { padding: 12 },
   cancelText: { color: colors.textMuted, fontSize: 16 },
 });

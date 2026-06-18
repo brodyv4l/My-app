@@ -1,12 +1,15 @@
-﻿import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { GOAL_TYPES } from '../../../constants/theme';
 import { formatSurveyDate } from '../../../utils/onboardingValidation';
-import { colors, radius } from '../../../constants/theme';
-
-// App Store: wire PRIVACY_POLICY_URL before release
-export const PRIVACY_POLICY_URL = null;
+import { radius } from '../../../constants/theme';
+import { useTheme } from '../../../context/ThemeContext';
+import { PrivacyPolicyModal, TermsModal } from '../../legal/LegalModal';
 
 export default function PlanReviewStep({ survey, plan, loading, onGenerate }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [legal, setLegal] = useState(null);
   const goalLabel = GOAL_TYPES.find((g) => g.id === survey.goalType)?.label;
 
   if (!plan) {
@@ -24,7 +27,7 @@ export default function PlanReviewStep({ survey, plan, loading, onGenerate }) {
           accessibilityLabel="Generate nutrition plan"
         >
           {loading ? (
-            <ActivityIndicator color="#09090b" />
+            <ActivityIndicator color={colors.onAccent} />
           ) : (
             <Text style={styles.generateText}>Generate My Plan</Text>
           )}
@@ -55,21 +58,24 @@ export default function PlanReviewStep({ survey, plan, loading, onGenerate }) {
       </View>
 
       <View style={styles.legalBox}>
-        {PRIVACY_POLICY_URL ? (
-          <TouchableOpacity accessibilityRole="link" accessibilityLabel="Privacy Policy">
-            <Text style={styles.legalLink}>Privacy Policy</Text>
-          </TouchableOpacity>
-        ) : (
-          <Text style={styles.legalPlaceholder}>
-            Privacy Policy link will appear here before App Store submission.
-          </Text>
-        )}
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Privacy Policy" onPress={() => setLegal('privacy')}>
+          <Text style={styles.legalLink}>Privacy Policy</Text>
+        </TouchableOpacity>
+        <Text style={styles.legalDot}>·</Text>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Terms of Service" onPress={() => setLegal('terms')}>
+          <Text style={styles.legalLink}>Terms of Service</Text>
+        </TouchableOpacity>
       </View>
+
+      <PrivacyPolicyModal visible={legal === 'privacy'} onClose={() => setLegal(null)} />
+      <TermsModal visible={legal === 'terms'} onClose={() => setLegal(null)} />
     </View>
   );
 }
 
 function SummaryRow({ label, value }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -79,6 +85,8 @@ function SummaryRow({ label, value }) {
 }
 
 function Macro({ label, value, color }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.macroItem}>
       <Text style={[styles.macroVal, { color }]}>{value}</Text>
@@ -87,7 +95,7 @@ function Macro({ label, value, color }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   center: { alignItems: 'center', paddingVertical: 24 },
   readyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8, textAlign: 'center' },
   readyDesc: { fontSize: 15, color: colors.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
@@ -101,7 +109,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   generateBtnDisabled: { opacity: 0.6 },
-  generateText: { color: '#09090b', fontSize: 16, fontWeight: '700' },
+  generateText: { color: colors.onAccent, fontSize: 16, fontWeight: '700' },
   summaryCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
@@ -130,7 +138,7 @@ const styles = StyleSheet.create({
   macroVal: { fontSize: 18, fontWeight: '700' },
   macroLbl: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
   explanation: { fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 16, lineHeight: 19 },
-  legalBox: { paddingVertical: 8, alignItems: 'center' },
+  legalBox: { paddingVertical: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
   legalLink: { color: colors.accent, fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
-  legalPlaceholder: { color: colors.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18 },
+  legalDot: { color: colors.textMuted, fontSize: 14 },
 });

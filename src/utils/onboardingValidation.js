@@ -1,4 +1,5 @@
 ﻿import { addDays, startOfDay, isAfter, isValid, parseISO } from 'date-fns';
+import { getLocalDateString } from './dates';
 
 export function validateMetrics({ heightFeet, heightInches, weight }) {
   const errors = {};
@@ -82,7 +83,7 @@ export function surveyToProfilePayload(survey, plan) {
     goalStrategy: survey.goalType === 'maintain' ? null : survey.goalStrategy,
     targetWeight: Number(survey.targetWeight),
     targetDate: survey.targetDate instanceof Date
-      ? survey.targetDate.toISOString().slice(0, 10)
+      ? getLocalDateString(survey.targetDate)
       : survey.targetDate,
     surveyCompletedAt: new Date().toISOString(),
     calorieGoal: plan?.calories,
@@ -101,7 +102,7 @@ export function buildAiSurveyPayload(survey) {
     goalStrategy: survey.goalStrategy || null,
     targetWeightLbs: Number(survey.targetWeight),
     targetDate: survey.targetDate instanceof Date
-      ? survey.targetDate.toISOString().slice(0, 10)
+      ? getLocalDateString(survey.targetDate)
       : survey.targetDate,
   };
 }

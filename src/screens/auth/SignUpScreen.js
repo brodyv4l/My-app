@@ -1,19 +1,50 @@
-﻿import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
+import ScreenLayout from '../../components/layout/ScreenLayout';
+import AuthDivider from '../../components/auth/AuthDivider';
+import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
+import { useGoogleAuthRequest, isGoogleConfigured } from '../../services/googleAuth';
+import { useToast } from '../../context/ToastContext';
+import { isFirebaseConfigured } from '../../services/firebase';
+import { isSupabaseConfigured } from '../../services/supabase';
 
 export default function SignUpScreen({ navigation }) {
-  const { signUp } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { signUp, googleSignIn, googleSignInWithToken } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [request, response, promptAsync] = useGoogleAuthRequest();
+  const googleReady = isSupabaseConfigured || isFirebaseConfigured || isGoogleConfigured();
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const token = response.authentication?.accessToken;
+      if (token) handleGoogleToken(token);
+    }
+  }, [response]);
+
+  const handleGoogleToken = async (accessToken) => {
+    setLoading(true);
+    try {
+      const user = await googleSignInWithToken(accessToken);
+      const first = (user.name || 'there').split(' ')[0];
+      showToast(`Welcome, ${first}! 🎉`, 'success');
+    } catch (e) {
+      showToast('Google sign-in failed. Try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignUp = async () => {
     setError('');
@@ -30,8 +61,19 @@ export default function SignUpScreen({ navigation }) {
     }
   };
 
+  const handleGoogle = async () => {
+    if (isSupabaseConfigured || isFirebaseConfigured) {
+      setLoading(true);
+      try { await googleSignIn(); } catch { showToast('Google sign-in failed.', 'error'); }
+      finally { setLoading(false); }
+      return;
+    }
+    if (!isGoogleConfigured()) { showToast('Add Google Client ID to .env', 'info'); return; }
+    await promptAsync();
+  };
+
   return (
-    <LinearGradient colors={['#0a0e14', '#141b26', '#0a0e14']} style={styles.container}>
+    <ScreenLayout edges={['top', 'bottom']} style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Create Account</Text>
@@ -45,17 +87,24 @@ export default function SignUpScreen({ navigation }) {
 
           <Button title="Create Account" onPress={handleSignUp} loading={loading} style={styles.btn} />
 
+          {googleReady && (
+            <>
+              <AuthDivider />
+              <GoogleSignInButton onPress={handleGoogle} loading={loading} disabled={!request && !isFirebaseConfigured && !isSupabaseConfigured} />
+            </>
+          )}
+
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.linkWrap}>
             <Text style={styles.link}>Already have an account? <Text style={styles.linkBold}>Sign In</Text></Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </ScreenLayout>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   flex: { flex: 1 },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 8 },

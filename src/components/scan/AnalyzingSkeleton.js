@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated, Image } from 'react-native';
-import { colors, radius } from '../../constants/theme';
+import { radius } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function AnalyzingSkeleton({ imageUri }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const pulse = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export default function AnalyzingSkeleton({ imageUri }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   wrap: { alignItems: 'center', paddingVertical: 16 },
   imageWrap: { width: '100%', height: 200, borderRadius: radius.lg, overflow: 'hidden', marginBottom: 16 },
   image: { width: '100%', height: '100%' },

@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function WeightTrendChart({ weightData, targetData, subtitle }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const width = Dimensions.get('window').width - 72;
   const allValues = [
     ...weightData.map((d) => d.value),
@@ -20,6 +23,7 @@ export default function WeightTrendChart({ weightData, targetData, subtitle }) {
     <View>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       <LineChart
+        key={`${weightData.length}-${weightData[0]?.date || ''}-${weightData[weightData.length - 1]?.date || ''}`}
         data={weightData}
         data2={targetData.length >= 2 ? targetData : undefined}
         width={width}
@@ -50,6 +54,8 @@ export default function WeightTrendChart({ weightData, targetData, subtitle }) {
 }
 
 function LegendDot({ color, label, dashed }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.legendItem}>
       <View style={[styles.dot, { backgroundColor: dashed ? 'transparent' : color, borderColor: color, borderWidth: dashed ? 1 : 0, borderStyle: dashed ? 'dashed' : 'solid' }]} />
@@ -58,7 +64,7 @@ function LegendDot({ color, label, dashed }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   empty: { color: colors.textMuted, textAlign: 'center', padding: 24, fontSize: 14 },
   subtitle: { fontSize: 13, color: colors.textMuted, marginBottom: 12 },
   legend: { flexDirection: 'row', gap: 16, marginTop: 12, justifyContent: 'center' },

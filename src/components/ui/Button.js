@@ -1,7 +1,11 @@
-﻿import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, radius } from '../../constants/theme';
+import { useMemo } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { radius } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export function Button({ title, onPress, variant = 'primary', disabled, loading, style }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isPrimary = variant === 'primary';
   const isOutline = variant === 'outline';
   const isGhost = variant === 'ghost';
@@ -21,7 +25,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, loading,
       activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color={isPrimary ? '#0a1a0f' : colors.accent} />
+        <ActivityIndicator color={isPrimary ? colors.onAccent : colors.accent} />
       ) : (
         <Text style={[styles.text, isPrimary && styles.textPrimary, isOutline && styles.textOutline, isGhost && styles.textGhost]}>
           {title}
@@ -31,7 +35,7 @@ export function Button({ title, onPress, variant = 'primary', disabled, loading,
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   btn: {
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -45,7 +49,7 @@ const styles = StyleSheet.create({
   ghost: { backgroundColor: colors.surface2 },
   disabled: { opacity: 0.5 },
   text: { fontSize: 15, fontWeight: '700' },
-  textPrimary: { color: '#0a1a0f' },
+  textPrimary: { color: colors.onAccent },
   textOutline: { color: colors.text },
   textGhost: { color: colors.textMuted },
 });

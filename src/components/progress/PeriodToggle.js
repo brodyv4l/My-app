@@ -1,7 +1,11 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, radius } from '../../constants/theme';
+import { radius } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function PeriodToggle({ value, onChange }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.row}>
       {[{ id: 'week', label: 'Weekly' }, { id: 'month', label: 'Monthly' }].map((opt) => (
@@ -19,7 +23,7 @@ export default function PeriodToggle({ value, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   row: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   btn: {
     flex: 1,

@@ -54,9 +54,9 @@ function pickBestDayPlan(goals) {
             if (calDiff > CALORIE_TOLERANCE) continue;
 
             const macroDiff =
-              Math.abs(totals.protein - goals.protein) +
-              Math.abs(totals.carbs - goals.carbs) +
-              Math.abs(totals.fat - goals.fat);
+              Math.abs(totals.protein - goals.protein) * 4 +
+              Math.abs(totals.carbs - goals.carbs) * 2 +
+              Math.abs(totals.fat - goals.fat) * 2;
 
             const score = calDiff * 10 + macroDiff;
             if (score < bestScore) {

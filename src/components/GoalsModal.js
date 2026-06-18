@@ -1,11 +1,13 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { DEFAULT_GOALS } from '../data/foods';
-import { colors } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function GoalsModal({ visible, goals, onSave, onClose }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [form, setForm] = useState({ ...goals });
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function GoalsModal({ visible, goals, onSave, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', padding: 20 },
   backdrop: {
     ...StyleSheet.absoluteFillObject,

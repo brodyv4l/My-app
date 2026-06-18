@@ -1,12 +1,14 @@
-﻿import { useState } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
+import ScreenLayout from '../../components/layout/ScreenLayout';
 
 export default function ForgotPasswordScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { forgotPassword, isFirebaseConfigured } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0a0e14', '#141b26', '#0a0e14']} style={styles.container}>
+    <ScreenLayout edges={['top', 'bottom']} style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
@@ -52,14 +54,14 @@ export default function ForgotPasswordScreen({ navigation }) {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </ScreenLayout>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, padding: 24, paddingTop: 60 },
+  scroll: { flexGrow: 1, padding: 24 },
   back: { marginBottom: 24 },
   backText: { color: colors.accent, fontSize: 15 },
   title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 8 },

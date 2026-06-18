@@ -1,11 +1,17 @@
-﻿import { View, Text, StyleSheet } from 'react-native';
-import { colors, radius } from '../../constants/theme';
+import { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { radius } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export function Card({ children, style }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
 export function SectionTitle({ title, subtitle }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
       <Text style={styles.title}>{title}</Text>
@@ -14,7 +20,7 @@ export function SectionTitle({ title, subtitle }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderWidth: 1,

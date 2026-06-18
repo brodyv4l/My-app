@@ -28,13 +28,14 @@ export function buildTargetTrajectory(profile, weightLogs, pointCount = 7) {
   return points;
 }
 
-export function buildWeightChartData(weightLogs, maxPoints = 14) {
-  const slice = weightLogs.slice(-maxPoints);
-  return slice.map((log, i) => ({
+export function buildWeightChartData(weightLogs) {
+  return weightLogs.map((log) => ({
+    date: log.date,
     value: log.weight,
-    label: i % Math.max(Math.ceil(slice.length / 5), 1) === 0
-      ? format(parseISO(log.date), 'M/d')
-      : '',
+    label: new Date(`${log.date}T12:00:00`).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
     dataPointText: String(log.weight),
   }));
 }

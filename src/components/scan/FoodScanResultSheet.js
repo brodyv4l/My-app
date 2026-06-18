@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform,
 } from 'react-native';
@@ -6,9 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { colors, radius, MEAL_TYPES, defaultMealByTime } from '../../constants/theme';
+import { radius, MEAL_TYPES, defaultMealByTime } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function FoodScanResultSheet({ visible, food, onClose, onLog }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [editing, setEditing] = useState(false);
   const [meal, setMeal] = useState(defaultMealByTime());
@@ -114,6 +117,8 @@ export default function FoodScanResultSheet({ visible, food, onClose, onLog }) {
 }
 
 function MacroChip({ label, value, color }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.macroChip}>
       <Text style={[styles.macroVal, { color }]}>{value}</Text>
@@ -122,7 +127,7 @@ function MacroChip({ label, value, color }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   sheetWrap: { justifyContent: 'flex-end' },
   sheet: {

@@ -1,8 +1,12 @@
-﻿import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+﻿import { useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { GOAL_STRATEGIES } from '../../../constants/onboarding';
-import { colors, radius } from '../../../constants/theme';
+import { radius } from '../../../constants/theme';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function GoalDetailsStep({ survey, errors, onChange }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isGain = survey.goalType === 'gain';
 
   return (
@@ -27,7 +31,7 @@ export default function GoalDetailsStep({ survey, errors, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   helper: { fontSize: 15, color: colors.textMuted, marginBottom: 16, lineHeight: 22 },
   option: {
     backgroundColor: colors.surface,

@@ -11,7 +11,7 @@ export const FOOD_API_CONFIG = {
   // Change this when you get an API, or set EXPO_PUBLIC_FOOD_API_PROVIDER in .env
   provider: process.env.EXPO_PUBLIC_FOOD_API_PROVIDER || 'usda',
 
-  apiKey: process.env.EXPO_PUBLIC_FOOD_API_KEY || '',
+  apiKey: process.env.EXPO_PUBLIC_USDA_API_KEY || process.env.EXPO_PUBLIC_FOOD_API_KEY || '',
   appId: process.env.EXPO_PUBLIC_FOOD_API_APP_ID || '',
 
   // Optional proxy for web CORS (your backend forwards requests to the food API)
@@ -25,7 +25,7 @@ export const FOOD_API_CONFIG = {
     apiKeyPrefix: process.env.EXPO_PUBLIC_FOOD_CUSTOM_KEY_PREFIX || 'Bearer ',
   },
 
-  searchDebounceMs: 350,
+  searchDebounceMs: 300,
   minQueryLength: 2,
   pageSize: 20,
 };

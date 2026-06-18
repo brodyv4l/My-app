@@ -1,18 +1,25 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
-import { colors, radius } from '../constants/theme';
+import { radius } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { analyzeFoodImage, extractBarcodeFromImage, isOpenAIConfigured } from '../services/openai';
 import { uriToBase64, mimeFromUri } from '../utils/image';
 import { searchFoods } from '../services/food/searchFoods';
 import { Button } from './ui/Button';
 import AnalyzingSkeleton from './scan/AnalyzingSkeleton';
+import PaywallOverlay from './paywall/PaywallOverlay';
+import { useUser } from '../context/UserContext';
 
 export default function ScanPanel({ onFoodDetected, onBarcodeFound, onAiFoodReady }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { isPro } = useUser();
+  const [aiPaywall, setAiPaywall] = useState(false);
   const [mode, setMode] = useState(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [loading, setLoading] = useState(false);
@@ -85,7 +92,7 @@ export default function ScanPanel({ onFoodDetected, onBarcodeFound, onAiFoodRead
           <Text style={styles.optionDesc}>Scan product barcodes from packaging photos or live camera</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.optionCard} onPress={() => setMode('ai')}>
+        <TouchableOpacity style={styles.optionCard} onPress={() => { if (!isPro) { setAiPaywall(true); return; } setMode('ai'); }}>
           <View style={[styles.iconWrap, styles.iconWrapAi]}>
             <Feather name="aperture" size={22} color={colors.info} />
           </View>
@@ -95,6 +102,7 @@ export default function ScanPanel({ onFoodDetected, onBarcodeFound, onAiFoodRead
             {!isOpenAIConfigured() ? ' (demo mode without API key)' : ''}
           </Text>
         </TouchableOpacity>
+        <PaywallOverlay visible={aiPaywall} featureName="AI Photo Scanner" benefit="Snap any meal for instant nutrition analysis" onDismiss={() => setAiPaywall(false)} />
       </View>
     );
   }
@@ -151,11 +159,12 @@ export default function ScanPanel({ onFoodDetected, onBarcodeFound, onAiFoodRead
       {preview && !loading && mode === 'barcode' && (
         <Image source={{ uri: preview }} style={styles.preview} resizeMode="cover" />
       )}
+      <PaywallOverlay visible={aiPaywall} featureName="AI Photo Scanner" benefit="Snap any meal for instant nutrition analysis" onDismiss={() => setAiPaywall(false)} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   options: { gap: 12 },
   optionCard: {
     backgroundColor: colors.surface2,

@@ -1,7 +1,10 @@
-﻿import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '../constants/theme';
+import { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function MacroBar({ label, value, goal, color }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const pct = Math.min((value / goal) * 100, 100);
 
   return (
@@ -17,7 +20,7 @@ export default function MacroBar({ label, value, goal, color }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { gap: 6 },
   header: { flexDirection: 'row', justifyContent: 'space-between' },
   label: { fontSize: 13, fontWeight: '600' },

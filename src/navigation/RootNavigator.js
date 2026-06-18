@@ -1,51 +1,70 @@
-﻿import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '../context/UserContext';
+import { useTheme } from '../context/ThemeContext';
 import AuthNavigator from './AuthNavigator';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainTabs from './MainTabs';
+import FoodLibraryScreen from '../screens/tabs/FoodLibraryScreen';
+import UpgradeScreen from '../screens/UpgradeScreen';
+import AdminScreen from '../screens/AdminScreen';
+import NutrientReportScreen from '../screens/NutrientReportScreen';
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
-import { colors } from '../constants/theme';
+import { isSurveyComplete } from '../utils/subscriptionMerge';
+import { navigationThemeForMode } from '../constants/navigationTheme';
+import { StatusBar } from 'expo-status-bar';
 
-const Stack = createNativeStackNavigator();
+const AppStackNav = createNativeStackNavigator();
 
-function AppStack() {
-  const { profile, loaded } = useUser();
+function needsOnboarding(profile) {
+  return !isSurveyComplete(profile);
+}
 
-  if (!loaded) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.accent} />
-      </View>
-    );
-  }
-
-  if (!profile.onboardingComplete) {
-    return <OnboardingScreen />;
-  }
-
-  return <MainTabs />;
+function MainAppStack() {
+  return (
+    <AppStackNav.Navigator screenOptions={{ headerShown: false, contentStyle: { flex: 1 } }}>
+      <AppStackNav.Screen name="Main" component={MainTabs} />
+      <AppStackNav.Screen name="Search" component={FoodLibraryScreen} />
+      <AppStackNav.Screen name="Upgrade" component={UpgradeScreen} />
+      <AppStackNav.Screen name="Admin" component={AdminScreen} />
+      <AppStackNav.Screen name="NutrientReport" component={NutrientReportScreen} />
+    </AppStackNav.Navigator>
+  );
 }
 
 export default function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { profile, loaded: profileLoaded } = useUser();
+  const { isDark, colors } = useTheme();
 
-  if (loading) {
+  const waiting = authLoading || (isAuthenticated && !profileLoaded);
+
+  if (waiting) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: colors.bg }]}>
         <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      {user ? <AppStack /> : <AuthNavigator />}
-    </NavigationContainer>
+    <View style={styles.app}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <NavigationContainer theme={navigationThemeForMode(profile.themeMode)}>
+        {!isAuthenticated ? (
+          <AuthNavigator />
+        ) : needsOnboarding(profile) ? (
+          <OnboardingScreen />
+        ) : (
+          <MainAppStack />
+        )}
+      </NavigationContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  app: { flex: 1 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
