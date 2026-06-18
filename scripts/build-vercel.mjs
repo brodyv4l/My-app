@@ -38,7 +38,11 @@ function run(label, command, args) {
 const hasSupabase = Boolean(
   process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
 );
-console.log(`Build env: APP_URL=${process.env.EXPO_PUBLIC_APP_URL || '(unset)'} supabase=${hasSupabase ? 'yes' : 'no'}`);
+const hasAi = Boolean(process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY);
+console.log(`Build env: APP_URL=${process.env.EXPO_PUBLIC_APP_URL || '(unset)'} supabase=${hasSupabase ? 'yes' : 'no'} ai=${hasAi ? 'yes' : 'no'}`);
+if (!hasAi) {
+  console.warn('\n⚠ AI disabled in this build: set EXPO_PUBLIC_ANTHROPIC_API_KEY in Vercel → Project Settings → Environment Variables, then redeploy.\n');
+}
 
 run('expo export', 'npx', ['expo', 'export', '--platform', 'web']);
 run('verify dist', 'node', ['scripts/verify-dist.mjs']);
