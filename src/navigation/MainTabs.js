@@ -28,6 +28,12 @@ function withErrorBoundary(Screen) {
   };
 }
 
+const LogScreenSafe = withErrorBoundary(LogScreen);
+const ProgressScreenSafe = withErrorBoundary(ProgressScreen);
+const MealsScreenSafe = withErrorBoundary(MealsScreen);
+const AIChatScreenSafe = withErrorBoundary(AIChatScreen);
+const ProfileScreenSafe = withErrorBoundary(ProfileScreen);
+
 const TAB_ORDER = ['Log', 'Progress', 'Meals', 'AI', 'Profile'];
 
 const TAB_CONFIG = {
@@ -128,11 +134,11 @@ function TabNavigator() {
             },
       }}
     >
-      <Tab.Screen name="Log" component={withErrorBoundary(LogScreen)} />
-      <Tab.Screen name="Progress" component={withErrorBoundary(ProgressScreen)} />
-      <Tab.Screen name="Meals" component={withErrorBoundary(MealsScreen)} />
-      <Tab.Screen name="AI" component={withErrorBoundary(AIChatScreen)} />
-      <Tab.Screen name="Profile" component={withErrorBoundary(ProfileScreen)} />
+      <Tab.Screen name="Log" component={LogScreenSafe} />
+      <Tab.Screen name="Progress" component={ProgressScreenSafe} />
+      <Tab.Screen name="Meals" component={MealsScreenSafe} />
+      <Tab.Screen name="AI" component={AIChatScreenSafe} />
+      <Tab.Screen name="Profile" component={ProfileScreenSafe} />
     </Tab.Navigator>
   );
 }
