@@ -2,17 +2,22 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 function loadDotEnv() {
-  const envPath = join(process.cwd(), '.env');
-  if (!existsSync(envPath)) return;
-  readFileSync(envPath, 'utf8').split('\n').forEach((line) => {
-    const t = line.trim();
-    if (!t || t.startsWith('#')) return;
-    const i = t.indexOf('=');
-    if (i === -1) return;
-    const key = t.slice(0, i).trim();
-    const val = t.slice(i + 1).trim();
-    if (!process.env[key]) process.env[key] = val;
+  ['.env.production', '.env'].forEach((file) => {
+    const envPath = join(process.cwd(), file);
+    if (!existsSync(envPath)) return;
+    readFileSync(envPath, 'utf8').split('\n').forEach((line) => {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) return;
+      const i = t.indexOf('=');
+      if (i === -1) return;
+      const key = t.slice(0, i).trim();
+      const val = t.slice(i + 1).trim();
+      if (!process.env[key]) process.env[key] = val;
+    });
   });
+  if (!process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY) {
+    process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  }
 }
 
 loadDotEnv();
@@ -86,6 +91,18 @@ if (missingEnv.length) {
 
 if (!ok) {
   process.exit(1);
+}
+
+if (process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY && bundleName) {
+  const bundlePath = join(jsDir, bundleName);
+  const bundle = readFileSync(bundlePath, 'utf8');
+  if (!bundle.includes('sk-ant-api')) {
+    console.error('Build has EXPO_PUBLIC_ANTHROPIC_API_KEY in env but it was not baked into the JS bundle.');
+    process.exit(1);
+  }
+  console.log('  AI key: baked into bundle');
+} else if (!process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY) {
+  console.warn('  AI key: not set at build time (AI chat/meals will be disabled)');
 }
 
 console.log('dist/ is ready for Vercel deploy (mobile PWA).');
