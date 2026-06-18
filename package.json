@@ -12,6 +12,7 @@
     "build:netlify": "node scripts/build-netlify.mjs",
     "build:vercel": "node scripts/build-vercel.mjs",
     "setup:supabase": "node scripts/setup-supabase.mjs",
+    "setup:vercel": "node scripts/setup-vercel-env.mjs",
     "check:apis": "node scripts/check-apis.mjs"
   },
   "dependencies": {

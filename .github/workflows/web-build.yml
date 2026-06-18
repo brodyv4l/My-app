@@ -1,0 +1,33 @@
+name: Web build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build web bundle
+        run: npm run build:vercel
+        env:
+          EXPO_PUBLIC_APP_URL: https://foodprint-pro.vercel.app
+          EXPO_PUBLIC_SUPABASE_URL: https://asnzsjweamnkhkvmpkcq.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzbnpzandlYW1ua2hrdm1wa2NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMDAxOTcsImV4cCI6MjA5NjY3NjE5N30._13aF52uH4a2eU5bRzfTk2S6uGfpN7L9ho2cQSjKIl8
+          EXPO_PUBLIC_FOOD_API_PROVIDER: usda
+          EXPO_PUBLIC_USDA_API_KEY: ${{ secrets.EXPO_PUBLIC_USDA_API_KEY }}
+          EXPO_PUBLIC_FOOD_API_KEY: ${{ secrets.EXPO_PUBLIC_FOOD_API_KEY }}
+          EXPO_PUBLIC_ANTHROPIC_API_KEY: ${{ secrets.EXPO_PUBLIC_ANTHROPIC_API_KEY }}
+          EXPO_PUBLIC_OPENAI_API_KEY: ${{ secrets.EXPO_PUBLIC_OPENAI_API_KEY }}
+          EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_GOOGLE_CLIENT_ID }}
+          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}

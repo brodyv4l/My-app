@@ -52,12 +52,14 @@ function parseArg(name) {
 }
 
 const env = loadEnv();
-const appUrl = (parseArg('--app-url') || env.EXPO_PUBLIC_APP_URL || 'https://foodprint-pro.netlify.app').replace(/\/$/, '');
+const appUrl = (parseArg('--app-url') || env.EXPO_PUBLIC_APP_URL || 'https://foodprint-pro.vercel.app').replace(/\/$/, '');
 
 const redirectUrls = new Set([
   ...DEFAULT_REDIRECTS,
   appUrl,
   `${appUrl}/auth/callback`,
+  'https://foodprint-pro.vercel.app',
+  'https://foodprint-pro.vercel.app/auth/callback',
 ]);
 
 const urls = [...redirectUrls].map((u) => `  "${u}"`).join(',\n');

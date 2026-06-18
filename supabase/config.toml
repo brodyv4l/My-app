@@ -3,7 +3,7 @@ project_id = "asnzsjweamnkhkvmpkcq"
 
 [auth]
 enabled = true
-site_url = "https://foodprint-pro.netlify.app"
+site_url = "https://foodprint-pro.vercel.app"
 additional_redirect_urls = [
   "http://localhost:8081",
   "http://localhost:19006",
@@ -11,6 +11,8 @@ additional_redirect_urls = [
   "exp://localhost:8081",
   "exp://**",
   "foodprint://auth/callback",
+  "https://foodprint-pro.vercel.app",
+  "https://foodprint-pro.vercel.app/auth/callback",
   "https://foodprint-pro.netlify.app",
   "https://chimerical-meerkat-d571bc.netlify.app",
   "https://chimerical-meerkat-d571bc.netlify.app/auth/callback",

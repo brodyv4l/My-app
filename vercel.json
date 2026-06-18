@@ -3,6 +3,16 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "framework": null,
+  "env": {
+    "EXPO_PUBLIC_APP_URL": "https://foodprint-pro.vercel.app",
+    "EXPO_PUBLIC_SUPABASE_URL": "https://asnzsjweamnkhkvmpkcq.supabase.co",
+    "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzbnpzandlYW1ua2hrdm1wa2NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMDAxOTcsImV4cCI6MjA5NjY3NjE5N30._13aF52uH4a2eU5bRzfTk2S6uGfpN7L9ho2cQSjKIl8",
+    "EXPO_PUBLIC_FOOD_API_PROVIDER": "usda",
+    "EXPO_PUBLIC_USDA_API_KEY": "VTDOxhrnK6HBQWo2GmpYF5PCUpD7UqTT0MHHAp32",
+    "EXPO_PUBLIC_FOOD_API_KEY": "VTDOxhrnK6HBQWo2GmpYF5PCUpD7UqTT0MHHAp32",
+    "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "393610885771-q11c0evmjmlvqieqphoqcc5ao7ts5p3d.apps.googleusercontent.com",
+    "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51TgDz8Re1r5kBtNw12JxtkZmEacvuV3gpha32GyL7fS4xWLaEawYXTKpLkIHi5o1yRVIkMpT3o9cnNcQ6PdagJ8d00vozxmmsQ"
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],

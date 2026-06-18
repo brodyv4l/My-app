@@ -1,14 +1,8 @@
-# Netlify — Foodprint mobile web (PWA)
+# Netlify — legacy redirect to Vercel (production is GitHub → Vercel)
 #
-# OPTION A — Manual deploy (upload dist/):
-#   1. Copy .env.example → .env and fill in keys
-#   2. npm run build:netlify
-#   3. Netlify → Sites → Deploy manually → drag the dist/ folder
-#
-# OPTION B — Git deploy (recommended):
-#   Connect this repo; Netlify runs build:netlify and publishes dist/
-#   Set EXPO_PUBLIC_* vars in Site configuration → Environment variables
-#   Set EXPO_PUBLIC_APP_URL to your site URL (e.g. https://foodprint-pro.netlify.app)
+# Live app: https://foodprint-pro.vercel.app
+# Push to main on GitHub; Vercel builds automatically (see vercel.json).
+# Run `npm run setup:vercel` once so Vercel has EXPO_PUBLIC_* build env vars.
 #
 # After deploy, add your Netlify URL to:
 #   Supabase → Auth → URL Configuration → Redirect URLs
@@ -16,12 +10,11 @@
 #   Deploy Supabase edge functions: create-checkout, verify-checkout, stripe-checkout
 
 [build]
-  command = "npm run build:netlify"
-  publish = "dist"
+  command = "echo Netlify is deprecated — use Vercel"
+  publish = "public"
 
 [build.environment]
   NODE_VERSION = "20"
-  EXPO_PUBLIC_APP_URL = "https://foodprint-pro.netlify.app"
 
 [[headers]]
   for = "/index.html"
@@ -67,5 +60,6 @@
 
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200
+  to = "https://foodprint-pro.vercel.app/:splat"
+  status = 301
+  force = true

@@ -1,0 +1,34 @@
+name: Sync Vercel env
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Write .env from GitHub secrets
+        run: |
+          cat > .env <<EOF
+          VERCEL_TOKEN=${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID=${{ secrets.VERCEL_TEAM_ID }}
+          EXPO_PUBLIC_APP_URL=https://foodprint-pro.vercel.app
+          EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_FOOD_API_PROVIDER=usda
+          EXPO_PUBLIC_USDA_API_KEY=${{ secrets.EXPO_PUBLIC_USDA_API_KEY }}
+          EXPO_PUBLIC_FOOD_API_KEY=${{ secrets.EXPO_PUBLIC_FOOD_API_KEY }}
+          EXPO_PUBLIC_ANTHROPIC_API_KEY=${{ secrets.EXPO_PUBLIC_ANTHROPIC_API_KEY }}
+          EXPO_PUBLIC_OPENAI_API_KEY=${{ secrets.EXPO_PUBLIC_OPENAI_API_KEY }}
+          EXPO_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.EXPO_PUBLIC_GOOGLE_CLIENT_ID }}
+          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          EOF
+
+      - run: node scripts/setup-vercel-env.mjs
