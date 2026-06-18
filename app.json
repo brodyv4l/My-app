@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "Foodprint",
+    "slug": "foodprint",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "foodprint",
+    "primaryColor": "#AAFF00",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "bundleIdentifier": "com.foodprint.app",
+      "supportsTablet": false,
+      "requireFullScreen": true,
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Foodprint uses your camera to scan food barcodes and take progress photos.",
+        "NSPhotoLibraryUsageDescription": "Foodprint accesses your photo library to add progress photos.",
+        "NSPhotoLibraryAddUsageDescription": "Foodprint saves your progress photos to your library.",
+        "NSMicrophoneUsageDescription": "Required for video features.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.foodprint.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0A0A"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "name": "Foodprint",
+      "shortName": "Foodprint",
+      "themeColor": "#0A0A0A",
+      "backgroundColor": "#0A0A0A",
+      "display": "standalone",
+      "orientation": "portrait",
+      "preferRelatedApplications": false
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Foodprint to scan food barcodes and take progress photos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Foodprint to access your photos for progress tracking.",
+          "cameraPermission": "Allow Foodprint to take progress photos."
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-web-browser"
+    ],
+    "backgroundColor": "#0A0A0A",
+    "notification": {
+      "color": "#AAFF00"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+# Auto-updated by scripts/setup-supabase.mjs
+project_id = "asnzsjweamnkhkvmpkcq"
+
+[auth]
+enabled = true
+site_url = "https://foodprint-pro.vercel.app"
+additional_redirect_urls = [
+  "http://localhost:8081",
+  "http://localhost:19006",
+  "http://127.0.0.1:8081",
+  "exp://localhost:8081",
+  "exp://**",
+  "foodprint://auth/callback",
+  "https://foodprint-pro.vercel.app",
+  "https://foodprint-pro.vercel.app/auth/callback",
+  "https://foodprint-pro.netlify.app",
+  "https://chimerical-meerkat-d571bc.netlify.app",
+  "https://chimerical-meerkat-d571bc.netlify.app/auth/callback",
+]
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.verify-checkout]
+verify_jwt = false
+
+[functions.cancel-subscription]
+verify_jwt = false
