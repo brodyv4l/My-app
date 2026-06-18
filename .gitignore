@@ -1,9 +1,0 @@
-﻿node_modules/
-.expo/
-dist/
-dist-test/
-dist-check/
-supabase/.temp/
-.env
-*.log
-.DS_Store
