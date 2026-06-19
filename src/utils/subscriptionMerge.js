@@ -30,16 +30,17 @@ const SURVEY_FIELDS = [
 export function preferLocalSurveyMerge(local, remote) {
   if (!local || !remote) return {};
   if (!isSurveyComplete(local)) return {};
-  if (isSurveyComplete(remote)) return {};
 
   const merged = {};
-  SURVEY_FIELDS.forEach((key) => {
-    if (local[key] !== undefined && local[key] !== null && local[key] !== '') {
-      merged[key] = local[key];
-    }
-  });
+  if (!isSurveyComplete(remote)) {
+    SURVEY_FIELDS.forEach((key) => {
+      if (local[key] !== undefined && local[key] !== null && local[key] !== '') {
+        merged[key] = local[key];
+      }
+    });
+  }
   merged.onboardingComplete = true;
-  if (!merged.surveyCompletedAt && local.surveyCompletedAt) {
+  if (local.surveyCompletedAt) {
     merged.surveyCompletedAt = local.surveyCompletedAt;
   }
   return merged;

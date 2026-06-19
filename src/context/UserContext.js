@@ -113,6 +113,36 @@ function mergeWeightLogs(local, remote) {
   return Array.from(byId.values()).sort(sortWeightLogs);
 }
 
+function readStoredProfile(uid, fallback = defaultProfile) {
+  return AsyncStorage.getItem(storageKey(uid, 'profile')).then((raw) => {
+    if (!raw) return fallback;
+    try {
+      return normalizeProfileUnits({ ...defaultProfile, ...JSON.parse(raw) });
+    } catch {
+      return fallback;
+    }
+  });
+}
+
+function collectRemoteFoodIds(grouped) {
+  const ids = new Set();
+  Object.values(grouped || {}).forEach((entries) => {
+    (entries || []).forEach((entry) => ids.add(String(entry.id)));
+  });
+  return ids;
+}
+
+function preserveLocalOnboarding(local, merged) {
+  if (!local || !isSurveyComplete(local)) return merged;
+  const surveyPatch = preferLocalSurveyMerge(local, merged);
+  return normalizeProfileUnits({
+    ...merged,
+    ...surveyPatch,
+    onboardingComplete: true,
+    surveyCompletedAt: merged.surveyCompletedAt || local.surveyCompletedAt || surveyPatch.surveyCompletedAt,
+  });
+}
+
 function trialDatesFromNow() {
   const start = new Date();
   const end = new Date(start);
@@ -200,10 +230,7 @@ export function UserProvider({ children }) {
 
       if (useCloud) {
         const remoteProfile = await fetchProfile(uid);
-        const freshLocalRaw = await AsyncStorage.getItem(storageKey(uid, 'profile'));
-        const freshLocal = freshLocalRaw
-          ? normalizeProfileUnits({ ...defaultProfile, ...JSON.parse(freshLocalRaw) })
-          : profileData;
+        const freshLocal = await readStoredProfile(uid, profileData);
 
         if (remoteProfile) {
           const surveyMerge = preferLocalSurveyMerge(freshLocal, remoteProfile);
@@ -216,40 +243,66 @@ export function UserProvider({ children }) {
             avatarUrl: remoteProfile.avatarUrl || freshLocal.avatarUrl || user?.avatarUrl || profileData.avatarUrl,
             onboardingComplete: isSurveyComplete({
               ...remoteProfile,
-              ...profileData,
+              ...freshLocal,
               ...surveyMerge,
             }),
           });
-          await AsyncStorage.setItem(storageKey(uid, 'profile'), JSON.stringify(profileData));
+          profileData = preserveLocalOnboarding(freshLocal, profileData);
           if (Object.keys(surveyMerge).length && canUseSupabaseData(user)) {
             upsertProfile(uid, profileData, user?.email).catch((e) => {
               console.warn('syncSurveyProfile:', e?.message);
             });
           }
+        } else {
+          profileData = preserveLocalOnboarding(freshLocal, profileData);
         }
+
+        const freshFoodRaw = await AsyncStorage.getItem(storageKey(uid, 'foodEntries'));
+        const freshFood = freshFoodRaw ? JSON.parse(freshFoodRaw) : foodData;
         const remoteLogs = await fetchFoodLogs(uid);
         if (remoteLogs) {
-          foodData = mergeFoodEntries(foodData, remoteLogs);
-          await AsyncStorage.setItem(storageKey(uid, 'foodEntries'), JSON.stringify(foodData));
-          if (!Object.keys(remoteLogs).length && Object.keys(foodData).length) {
+          foodData = mergeFoodEntries(freshFood, remoteLogs);
+          const remoteFoodIds = collectRemoteFoodIds(remoteLogs);
+          const unsyncedFood = [];
+          Object.entries(foodData).forEach(([date, entries]) => {
+            (entries || []).forEach((entry) => {
+              if (!remoteFoodIds.has(String(entry.id)) && !isSupabaseLogId(entry.id)) {
+                unsyncedFood.push({ date, entry });
+              }
+            });
+          });
+          if (unsyncedFood.length) {
+            await Promise.all(
+              unsyncedFood.map(({ date, entry }) => insertFoodLog(uid, date, entry).catch((e) => {
+                console.warn('syncFoodLog:', e?.message);
+              })),
+            );
+          } else if (!Object.keys(remoteLogs).length && Object.keys(foodData).length) {
             await migrateLocalFoodLogs(uid, foodData);
           }
-        } else if (Object.keys(foodData).length) {
-          await migrateLocalFoodLogs(uid, foodData);
+        } else {
+          foodData = freshFood;
+          if (Object.keys(foodData).length) {
+            await migrateLocalFoodLogs(uid, foodData);
+          }
         }
+
         const remoteFavs = await fetchSavedFoods(uid);
         if (remoteFavs?.length) {
           favData = remoteFavs;
           await AsyncStorage.setItem(storageKey(uid, 'favorites'), JSON.stringify(favData));
         }
+      } else {
+        profileData = preserveLocalOnboarding(profileData, profileData);
       }
 
       let weightData = w ? JSON.parse(w) : [];
+      const freshWeightRaw = await AsyncStorage.getItem(storageKey(uid, 'weightLogs'));
+      const freshWeight = freshWeightRaw ? JSON.parse(freshWeightRaw) : weightData;
       if (useCloud) {
         const remoteWeights = await fetchWeightLogs(uid);
         const remoteIds = new Set((remoteWeights || []).map((log) => String(log.id)));
-        weightData = mergeWeightLogs(weightData, remoteWeights || []);
-        await AsyncStorage.setItem(storageKey(uid, 'weightLogs'), JSON.stringify(weightData));
+        weightData = mergeWeightLogs(freshWeight, remoteWeights || []);
         const unsynced = weightData.filter((log) => !remoteIds.has(String(log.id)));
         if (unsynced.length) {
           await Promise.all(
@@ -258,7 +311,15 @@ export function UserProvider({ children }) {
             })),
           );
         }
+      } else {
+        weightData = freshWeight;
       }
+
+      if (cancelled) return;
+
+      await AsyncStorage.setItem(storageKey(uid, 'profile'), JSON.stringify(profileData));
+      await AsyncStorage.setItem(storageKey(uid, 'foodEntries'), JSON.stringify(foodData));
+      await AsyncStorage.setItem(storageKey(uid, 'weightLogs'), JSON.stringify(weightData));
 
       setProfile(profileData);
       setFoodEntries(foodData);
@@ -309,7 +370,7 @@ export function UserProvider({ children }) {
       cancelled = true;
       clearTimeout(loadTimeout);
     };
-  }, [uid, user?.name, user?.provider, resetUserData]);
+  }, [uid, resetUserData]);
 
   const persist = useCallback(async (key, value) => {
     if (!uid) return;
@@ -330,11 +391,11 @@ export function UserProvider({ children }) {
     return nextProfile;
   }, [persist, uid, user]);
 
-  const addFoodEntry = useCallback((date, entry) => {
+  const addFoodEntry = useCallback(async (date, entry) => {
     const optimisticId = entry.id || `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const optimistic = { ...entry, id: optimisticId };
 
-    const commitEntry = (savedEntry) => {
+    const commitEntry = async (savedEntry) => {
       let nextEntries;
       let wasEmpty = false;
       setFoodEntries((prev) => {
@@ -344,7 +405,7 @@ export function UserProvider({ children }) {
         nextEntries = { ...prev, [date]: [...withoutDup, savedEntry] };
         return nextEntries;
       });
-      persist('foodEntries', nextEntries).catch((e) => console.warn('persist foodEntries:', e?.message));
+      await persist('foodEntries', nextEntries);
       if (wasEmpty) {
         setProfile((p) => {
           const updated = applyStreakOnFoodLog(p, date);
@@ -355,10 +416,10 @@ export function UserProvider({ children }) {
       }
     };
 
-    commitEntry(optimistic);
+    await commitEntry(optimistic);
 
     if (canUseSupabaseData(user)) {
-      insertFoodLog(uid, date, entry).then((saved) => {
+      insertFoodLog(uid, date, entry).then(async (saved) => {
         if (saved?.id && saved.id !== optimisticId) {
           let nextEntries;
           setFoodEntries((prev) => {
@@ -366,7 +427,7 @@ export function UserProvider({ children }) {
             nextEntries = { ...prev, [date]: day };
             return nextEntries;
           });
-          persist('foodEntries', nextEntries).catch((e) => console.warn('persist foodEntries:', e?.message));
+          await persist('foodEntries', nextEntries);
         }
       }).catch((e) => console.warn('insertFoodLog:', e?.message));
     }
