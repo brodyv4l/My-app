@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -91,6 +92,7 @@ export default function FoodLibraryScreen() {
   } = useUser();
   const { showToast } = useToast();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { width } = useWindowDimensions();
   const contentMaxWidth = width >= 1024 ? 480 : width >= 768 ? 600 : null;
@@ -572,7 +574,7 @@ export default function FoodLibraryScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={[styles.content, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center', width: '100%' } : null]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center', width: '100%' } : null]} keyboardShouldPersistTaps="handled">
         <TouchableOpacity style={styles.backRow} onPress={() => {
           if (navigation.canGoBack()) navigation.goBack();
           else navigation.navigate('Main', { screen: 'Log' });
@@ -632,8 +634,8 @@ export default function FoodLibraryScreen() {
 
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, minHeight: 44, alignSelf: 'flex-start' },
   backText: { color: colors.accent, fontSize: 14, fontWeight: '600' },
   title: { fontSize: 28, fontWeight: '700', color: colors.text, letterSpacing: -0.5, marginBottom: 12 },
   tabBar: { marginBottom: 16, maxHeight: 44 },

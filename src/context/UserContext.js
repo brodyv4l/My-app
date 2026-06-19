@@ -86,6 +86,33 @@ function sortWeightLogs(a, b) {
   return (a.createdAt || '').localeCompare(b.createdAt || '');
 }
 
+function mergeFoodEntries(local, remote) {
+  if (!remote || !Object.keys(remote).length) return local || {};
+  if (!local || !Object.keys(local).length) return remote;
+  const merged = { ...remote };
+  Object.entries(local).forEach(([date, entries]) => {
+    const remoteDay = merged[date] || [];
+    const byId = new Map(remoteDay.map((entry) => [String(entry.id), entry]));
+    (entries || []).forEach((entry) => {
+      byId.set(String(entry.id), entry);
+    });
+    merged[date] = Array.from(byId.values());
+  });
+  return merged;
+}
+
+function mergeWeightLogs(local, remote) {
+  const localLogs = Array.isArray(local) ? local : [];
+  const remoteLogs = Array.isArray(remote) ? remote : [];
+  if (!remoteLogs.length) return localLogs;
+  if (!localLogs.length) return remoteLogs;
+  const byId = new Map(remoteLogs.map((entry) => [String(entry.id), entry]));
+  localLogs.forEach((entry) => {
+    if (!byId.has(String(entry.id))) byId.set(String(entry.id), entry);
+  });
+  return Array.from(byId.values()).sort(sortWeightLogs);
+}
+
 function trialDatesFromNow() {
   const start = new Date();
   const end = new Date(start);
@@ -201,9 +228,12 @@ export function UserProvider({ children }) {
           }
         }
         const remoteLogs = await fetchFoodLogs(uid);
-        if (remoteLogs && Object.keys(remoteLogs).length) {
-          foodData = remoteLogs;
+        if (remoteLogs) {
+          foodData = mergeFoodEntries(foodData, remoteLogs);
           await AsyncStorage.setItem(storageKey(uid, 'foodEntries'), JSON.stringify(foodData));
+          if (!Object.keys(remoteLogs).length && Object.keys(foodData).length) {
+            await migrateLocalFoodLogs(uid, foodData);
+          }
         } else if (Object.keys(foodData).length) {
           await migrateLocalFoodLogs(uid, foodData);
         }
@@ -217,9 +247,16 @@ export function UserProvider({ children }) {
       let weightData = w ? JSON.parse(w) : [];
       if (useCloud) {
         const remoteWeights = await fetchWeightLogs(uid);
-        if (remoteWeights?.length) {
-          weightData = remoteWeights;
-          await AsyncStorage.setItem(storageKey(uid, 'weightLogs'), JSON.stringify(remoteWeights));
+        const remoteIds = new Set((remoteWeights || []).map((log) => String(log.id)));
+        weightData = mergeWeightLogs(weightData, remoteWeights || []);
+        await AsyncStorage.setItem(storageKey(uid, 'weightLogs'), JSON.stringify(weightData));
+        const unsynced = weightData.filter((log) => !remoteIds.has(String(log.id)));
+        if (unsynced.length) {
+          await Promise.all(
+            unsynced.map((log) => insertWeightLog(uid, log).catch((e) => {
+              console.warn('syncWeightLog:', e?.message);
+            })),
+          );
         }
       }
 
@@ -298,22 +335,24 @@ export function UserProvider({ children }) {
     const optimistic = { ...entry, id: optimisticId };
 
     const commitEntry = (savedEntry) => {
+      let nextEntries;
+      let wasEmpty = false;
       setFoodEntries((prev) => {
         const dayEntries = prev[date] || [];
-        const wasEmpty = dayEntries.length === 0;
+        wasEmpty = dayEntries.length === 0;
         const withoutDup = dayEntries.filter((e) => e.id !== optimisticId && e.id !== savedEntry.id);
-        const next = { ...prev, [date]: [...withoutDup, savedEntry] };
-        persist('foodEntries', next);
-        if (wasEmpty) {
-          setProfile((p) => {
-            const updated = applyStreakOnFoodLog(p, date);
-            persist('profile', updated);
-            if (canUseSupabaseData(user)) upsertProfile(uid, updated, user?.email);
-            return updated;
-          });
-        }
-        return next;
+        nextEntries = { ...prev, [date]: [...withoutDup, savedEntry] };
+        return nextEntries;
       });
+      persist('foodEntries', nextEntries).catch((e) => console.warn('persist foodEntries:', e?.message));
+      if (wasEmpty) {
+        setProfile((p) => {
+          const updated = applyStreakOnFoodLog(p, date);
+          persist('profile', updated);
+          if (canUseSupabaseData(user)) upsertProfile(uid, updated, user?.email);
+          return updated;
+        });
+      }
     };
 
     commitEntry(optimistic);
@@ -321,12 +360,13 @@ export function UserProvider({ children }) {
     if (canUseSupabaseData(user)) {
       insertFoodLog(uid, date, entry).then((saved) => {
         if (saved?.id && saved.id !== optimisticId) {
+          let nextEntries;
           setFoodEntries((prev) => {
             const day = (prev[date] || []).map((e) => (e.id === optimisticId ? saved : e));
-            const next = { ...prev, [date]: day };
-            persist('foodEntries', next);
-            return next;
+            nextEntries = { ...prev, [date]: day };
+            return nextEntries;
           });
+          persist('foodEntries', nextEntries).catch((e) => console.warn('persist foodEntries:', e?.message));
         }
       }).catch((e) => console.warn('insertFoodLog:', e?.message));
     }
@@ -407,11 +447,12 @@ export function UserProvider({ children }) {
       if (remote) saved = remote;
     }
 
+    let nextLogs;
     setWeightLogs((prev) => {
-      const next = [...prev, saved].sort(sortWeightLogs);
-      persist('weightLogs', next);
-      return next;
+      nextLogs = [...prev, saved].sort(sortWeightLogs);
+      return nextLogs;
     });
+    await persist('weightLogs', nextLogs);
   }, [persist, uid, user]);
 
   const toggleFavorite = useCallback((food) => {
