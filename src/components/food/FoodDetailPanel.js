@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import {
-  View, Text, Modal, Pressable, TouchableOpacity, ScrollView, StyleSheet,
+  View, Text, Modal, Pressable, TouchableOpacity, ScrollView, StyleSheet, Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -42,6 +42,37 @@ function asRows(items) {
     amount: typeof value === 'object' ? (value.amount ?? value.value) : value,
     unit: typeof value === 'object' ? (value.unit || '') : '',
   }));
+}
+
+function buildScaledFood(food, base, portion) {
+  const active = portion || {
+    factor: 1,
+    calories: base.calories,
+    protein: base.protein,
+    carbs: base.carbs,
+    fat: base.fat,
+    amount: 1,
+    unit: 'serving',
+    label: food?.serving || '1 serving',
+    servingGrams: food?.servingGrams || 100,
+    servings: 1,
+  };
+
+  return {
+    ...food,
+    calories: active.calories,
+    protein: active.protein,
+    carbs: active.carbs,
+    fat: active.fat,
+    servingMultiplier: active.factor,
+    factor: active.factor,
+    servings: active.servings || active.factor,
+    servingAmount: active.amount,
+    servingUnit: active.unit,
+    servingGrams: active.servingGrams,
+    baseServingGrams: base.baseServingGrams,
+    serving: active.label || food.serving,
+  };
 }
 
 function NutrientRow({ label, amount, unit, bold }) {
@@ -106,6 +137,18 @@ export default function FoodDetailPanel({
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [portion, setPortion] = useState(null);
+  const portionRef = useRef(null);
+
+  useEffect(() => {
+    if (!visible) return;
+    portionRef.current = null;
+    setPortion(null);
+  }, [food?.id, visible]);
+
+  const handlePortionChange = useCallback((nextPortion) => {
+    portionRef.current = nextPortion;
+    setPortion(nextPortion);
+  }, []);
 
   const base = useMemo(() => ({
     calories: food?.calories ?? 0,
@@ -154,7 +197,12 @@ export default function FoodDetailPanel({
   const aminoAcids = asRows(food.aminoAcids);
   const fattyAcids = asRows(food.fattyAcids);
 
-  const handleLog = () => onLog?.(scaled);
+  const handleLog = () => {
+    Keyboard.dismiss();
+    const payload = buildScaledFood(food, base, portionRef.current || portion);
+    onLog?.(payload);
+    onClose?.();
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -171,14 +219,14 @@ export default function FoodDetailPanel({
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.brand}>{food.brand?.trim() ? food.brand : 'Generic'}</Text>
 
           <PortionEditor
             key={food.id}
             base={base}
             baseGrams={base.baseServingGrams}
-            onChange={setPortion}
+            onChange={handlePortionChange}
           />
 
           <View style={styles.labelBox}>

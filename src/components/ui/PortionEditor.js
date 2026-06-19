@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Pressable } from 'react-native';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { radius } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
@@ -63,7 +63,7 @@ export default function PortionEditor({
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const sig = `${computed.amount}|${computed.unit}|${computed.calories}|${computed.protein}`;
-  useEffect(() => { onChangeRef.current?.(computed); }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => { onChangeRef.current?.(computed); }, [sig, computed]);
 
   return (
     <View style={styles.wrap}>
@@ -82,24 +82,21 @@ export default function PortionEditor({
         </TouchableOpacity>
       </View>
 
-      <Modal visible={unitOpen} transparent animationType="fade" onRequestClose={() => setUnitOpen(false)}>
-        <Pressable style={styles.unitOverlay} onPress={() => setUnitOpen(false)}>
-          <Pressable style={styles.unitSheet} onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.unitSheetTitle}>Select unit</Text>
-            <ScrollView style={{ maxHeight: 320 }}>
-              {ALL_UNITS.map((u) => (
-                <TouchableOpacity
-                  key={u}
-                  style={[styles.unitOption, unit === u && styles.unitOptionOn]}
-                  onPress={() => { setUnit(u); setUnitOpen(false); }}
-                >
-                  <Text style={[styles.unitOptionText, unit === u && styles.unitOptionTextOn]}>{u}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      {unitOpen ? (
+        <View style={styles.unitDropdown}>
+          <ScrollView style={styles.unitDropdownScroll} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {ALL_UNITS.map((u) => (
+              <TouchableOpacity
+                key={u}
+                style={[styles.unitOption, unit === u && styles.unitOptionOn]}
+                onPress={() => { setUnit(u); setUnitOpen(false); }}
+              >
+                <Text style={[styles.unitOptionText, unit === u && styles.unitOptionTextOn]}>{u}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       <Text style={styles.preview}>
         {computed.calories} cal {String.fromCharCode(183)} P {computed.protein}g {String.fromCharCode(183)} C {computed.carbs}g {String.fromCharCode(183)} F {computed.fat}g
@@ -109,7 +106,7 @@ export default function PortionEditor({
 }
 
 const makeStyles = (colors) => StyleSheet.create({
-  wrap: { gap: 10, marginTop: 8 },
+  wrap: { gap: 10, marginTop: 8, position: 'relative' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   amountInput: {
     flex: 1,
@@ -136,10 +133,23 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.border,
   },
   unitText: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  unitOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
-  unitSheet: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: colors.border },
-  unitSheetTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 },
-  unitOption: { paddingVertical: 12, paddingHorizontal: 8, borderRadius: radius.sm },
+  unitDropdown: {
+    position: 'absolute',
+    top: 48,
+    left: 0,
+    right: 0,
+    zIndex: 30,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  unitDropdownScroll: { maxHeight: 220 },
+  unitOption: { paddingVertical: 12, paddingHorizontal: 12, borderRadius: radius.sm },
   unitOptionOn: { backgroundColor: colors.accentMuted },
   unitOptionText: { color: colors.text, fontSize: 15 },
   unitOptionTextOn: { color: colors.accent, fontWeight: '700' },
