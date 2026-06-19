@@ -66,7 +66,7 @@ export default function PortionEditor({
   useLayoutEffect(() => { onChangeRef.current?.(computed); }, [sig, computed]);
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, unitOpen && styles.wrapOpen]}>
       <View style={styles.row}>
         <TextInput
           style={styles.amountInput}
@@ -107,6 +107,7 @@ export default function PortionEditor({
 
 const makeStyles = (colors) => StyleSheet.create({
   wrap: { gap: 10, marginTop: 8, position: 'relative' },
+  wrapOpen: { zIndex: 100, elevation: 100 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   amountInput: {
     flex: 1,
@@ -138,7 +139,7 @@ const makeStyles = (colors) => StyleSheet.create({
     top: 48,
     left: 0,
     right: 0,
-    zIndex: 30,
+    zIndex: 101,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
